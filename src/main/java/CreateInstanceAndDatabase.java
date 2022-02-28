@@ -3,9 +3,9 @@ import com.google.cloud.spanner.*;
 import com.google.spanner.admin.database.v1.CreateDatabaseMetadata;
 import com.google.spanner.admin.instance.v1.CreateInstanceMetadata;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
-public class Quickstart {
+public class CreateInstanceAndDatabase {
     public static void main(String[] args) {
         String projectId = "span-cloud-testing";
         String instanceId = "quickstart-instance";
@@ -45,13 +45,19 @@ public class Quickstart {
                 .newDatabaseBuilder(DatabaseId.of(projectId, instanceId, databaseId))
                 .build();
         final OperationFuture<Database, CreateDatabaseMetadata> operationDatabase = dbAdminClient
-                .createDatabase(databaseToCreate, Collections.singleton(
-                        "CREATE TABLE Singers ("
-                                + "  SingerId   INT64 NOT NULL,"
+                .createDatabase(databaseToCreate, Arrays.asList(
+                        "CREATE TABLE Customers ("
+                                + "  CustomerId   INT64 NOT NULL,"
                                 + "  FirstName  STRING(1024),"
                                 + "  LastName   STRING(1024),"
-                                + "  SingerInfo BYTES(MAX)"
-                                + ") PRIMARY KEY (SingerId)"
+                                + "  MobileNumber STRING(10),"
+                                + ") PRIMARY KEY (CustomerId)",
+                        "CREATE TABLE Account ("
+                                + "  CustomerId   INT64 NOT NULL,"
+                                + "  AccountNumber  STRING(8) NOT NULL,"
+                                + "  AccountType   STRING(1024),"
+                                + ") PRIMARY KEY (CustomerId, AccountNumber),"
+                                + "  INTERLEAVE IN PARENT Customers ON DELETE CASCADE"
                 ));
         try {
             // Initiate the request which returns an OperationFuture.
@@ -65,31 +71,5 @@ public class Quickstart {
             // and the thread is interrupted, either before or during the activity.
             throw SpannerExceptionFactory.propagateInterrupt(e);
         }
-
-        // Insert and Read Data
-        DatabaseId db = DatabaseId.of(options.getProjectId(), instanceId, databaseId);
-        DatabaseClient dbClient = spanner.getDatabaseClient(db);
-        dbClient
-                .readWriteTransaction()
-                .run(transaction -> {
-                    // Insert record.
-                    String sql =
-                            "INSERT INTO Singers (SingerId, FirstName, LastName) "
-                                    + " VALUES (11, 'Timothy', 'Campbell')";
-                    long rowCount = transaction.executeUpdate(Statement.of(sql));
-                    System.out.printf("%d record inserted.\n", rowCount);
-                    // Read newly inserted record.
-                    sql = "SELECT FirstName, LastName FROM Singers WHERE SingerId = 11";
-                    // We use a try-with-resource block to automatically release resources held by
-                    // ResultSet.
-                    try (ResultSet resultSet = transaction.executeQuery(Statement.of(sql))) {
-                        while (resultSet.next()) {
-                            System.out.printf(
-                                    "%s %s\n",
-                                    resultSet.getString("FirstName"), resultSet.getString("LastName"));
-                        }
-                    }
-                    return null;
-                });
     }
 }
