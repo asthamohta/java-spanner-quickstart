@@ -3,7 +3,7 @@ import com.google.cloud.spanner.*;
 import com.google.spanner.admin.database.v1.CreateDatabaseMetadata;
 import com.google.spanner.admin.instance.v1.CreateInstanceMetadata;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 public class CreateInstanceAndDatabase {
     public static void main(String[] args) {
@@ -45,19 +45,13 @@ public class CreateInstanceAndDatabase {
                 .newDatabaseBuilder(DatabaseId.of(projectId, instanceId, databaseId))
                 .build();
         final OperationFuture<Database, CreateDatabaseMetadata> operationDatabase = dbAdminClient
-                .createDatabase(databaseToCreate, Arrays.asList(
+                .createDatabase(databaseToCreate, Collections.singleton(
                         "CREATE TABLE Customers ("
                                 + "  CustomerId   INT64 NOT NULL,"
                                 + "  FirstName  STRING(1024),"
                                 + "  LastName   STRING(1024),"
-                                + "  MobileNumber STRING(10),"
-                                + ") PRIMARY KEY (CustomerId)",
-                        "CREATE TABLE Account ("
-                                + "  CustomerId   INT64 NOT NULL,"
-                                + "  AccountNumber  STRING(8) NOT NULL,"
-                                + "  AccountType   STRING(1024),"
-                                + ") PRIMARY KEY (CustomerId, AccountNumber),"
-                                + "  INTERLEAVE IN PARENT Customers ON DELETE CASCADE"
+                                + "  MobileNumber STRING(15),"
+                                + ") PRIMARY KEY (CustomerId)"
                 ));
         try {
             // Initiate the request which returns an OperationFuture.
