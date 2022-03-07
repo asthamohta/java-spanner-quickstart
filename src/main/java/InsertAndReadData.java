@@ -1,13 +1,15 @@
 import com.google.cloud.spanner.*;
 
+import java.util.Scanner;
+
 public class InsertAndReadData {
-    public static void createUser(DatabaseClient dbClient, int customerId, String FirstName, String LastName, String MobileNumber){
+    public static void createCustomer(DatabaseClient dbClient, String customerId, String FirstName, String LastName, String MobileNumber){
         dbClient
                 .readWriteTransaction()
                 .run(transaction -> {
                     String sql =
                             String.format("INSERT INTO Customers (CustomerId, FirstName, LastName, MobileNumber) "
-                                    + " VALUES (%s, '%s', '%s', '%s')", String.valueOf(customerId),
+                                    + " VALUES (%s, '%s', '%s', '%s')", customerId,
                                     FirstName, LastName, MobileNumber);
                     long rowCount = transaction.executeUpdate(Statement.of(sql));
                     System.out.printf("%d record inserted.\n", rowCount);
@@ -15,7 +17,7 @@ public class InsertAndReadData {
                 });
     }
 
-    public static void authenticateData(DatabaseClient dbClient, int customerId){
+    public static void authenticateData(DatabaseClient dbClient, String customerId){
         dbClient
                 .readWriteTransaction()
                 .run(transaction -> {
@@ -25,7 +27,7 @@ public class InsertAndReadData {
                     try (ResultSet resultSet = transaction.executeQuery(Statement.of(sql))) {
                         while (resultSet.next()) {
                             System.out.printf(
-                                    "%s %s %s\n",
+                                    "Customer found as: %s %s %s\n",
                                     resultSet.getString("FirstName"), resultSet.getString("LastName"), resultSet.getString("MobileNumber"));
                         }
                     }
@@ -40,11 +42,21 @@ public class InsertAndReadData {
         SpannerOptions options = SpannerOptions.newBuilder().build();
         Spanner spanner = options.getService();
 
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter Customer Id: ");
+        String customerId = input.nextLine();
+        System.out.println("Enter Customer First Name: ");
+        String customerFirstName = input.nextLine();
+        System.out.println("Enter Customer Last Name: ");
+        String customerLastName = input.nextLine();
+        System.out.println("Enter Customer Mobile Number: ");
+        String customerMobileNumber = input.nextLine();
+
         // Insert and Read Data
         DatabaseId db = DatabaseId.of(options.getProjectId(), instanceId, databaseId);
         DatabaseClient dbClient = spanner.getDatabaseClient(db);
-        createUser(dbClient, 12, "Timothy", "Campbell", "9938718933");
-        authenticateData(dbClient, 12);
+        createCustomer(dbClient, customerId, customerFirstName, customerLastName, customerMobileNumber);
+        authenticateData(dbClient, customerId);
 
     }
 }
