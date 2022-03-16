@@ -3,11 +3,11 @@ import com.google.cloud.spanner.*;
 import com.google.spanner.admin.database.v1.CreateDatabaseMetadata;
 import com.google.spanner.admin.instance.v1.CreateInstanceMetadata;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 public class CreateInstanceAndDatabase {
     public static void main(String[] args) {
-        String projectId = "span-cloud-testing";
+        String projectId = "appdev-soda-spanner-staging";
         String instanceId = "quickstart-instance";
         String databaseId = "quickstart-database";
         String configId = "regional-us-central1";
@@ -45,13 +45,17 @@ public class CreateInstanceAndDatabase {
                 .newDatabaseBuilder(DatabaseId.of(projectId, instanceId, databaseId))
                 .build();
         final OperationFuture<Database, CreateDatabaseMetadata> operationDatabase = dbAdminClient
-                .createDatabase(databaseToCreate, Collections.singleton(
+                .createDatabase(databaseToCreate, Arrays.asList(
                         "CREATE TABLE Customers ("
                                 + "  CustomerId   INT64 NOT NULL,"
+                                + "  Username STRING(100) NOT NULL,"
+                                + "  Password STRING(100) NOT NULL,"
                                 + "  FirstName  STRING(1024),"
                                 + "  LastName   STRING(1024),"
                                 + "  MobileNumber STRING(15),"
-                                + ") PRIMARY KEY (CustomerId)"
+                                + ") PRIMARY KEY (CustomerId)",
+                        "CREATE UNIQUE INDEX UniqueUsername ON Customers(Username)",
+                        "CREATE INDEX Login ON Customers(Username, Password)"
                 ));
         try {
             // Initiate the request which returns an OperationFuture.
