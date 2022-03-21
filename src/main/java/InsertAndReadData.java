@@ -47,21 +47,30 @@ public class InsertAndReadData {
         Spanner spanner = options.getService();
 
         Scanner input = new Scanner(System.in);
+        System.out.println("Would you like to login or create a new user? \n" +
+                "Enter 1 for login\n"+
+                "Enter 2 for sign up");
+        int option = input.nextInt();
+        input.nextLine();
         System.out.println("Enter Username: ");
         String username = input.nextLine();
         System.out.println("Enter Password: ");
         String password = input.nextLine();
-        System.out.println("Enter Customer First Name: ");
-        String customerFirstName = input.nextLine();
-        System.out.println("Enter Customer Last Name: ");
-        String customerLastName = input.nextLine();
-        System.out.println("Enter Customer Mobile Number: ");
-        String customerMobileNumber = input.nextLine();
 
-        // Insert and Read Data
         DatabaseId db = DatabaseId.of(options.getProjectId(), instanceId, databaseId);
         DatabaseClient dbClient = spanner.getDatabaseClient(db);
-        createCustomer(dbClient, username, password, customerFirstName, customerLastName, customerMobileNumber);
-        login(dbClient, username, password);
+
+        if(option==1){
+            login(dbClient, username, password);
+        }
+        else if(option==2){
+            System.out.println("Enter Customer First Name: ");
+            String customerFirstName = input.nextLine();
+            System.out.println("Enter Customer Last Name: ");
+            String customerLastName = input.nextLine();
+            System.out.println("Enter Customer Mobile Number: ");
+            String customerMobileNumber = input.nextLine();
+            createCustomer(dbClient, username, password, customerFirstName, customerLastName, customerMobileNumber);
+        }
     }
 }
