@@ -4,13 +4,15 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class InsertAndReadData {
-    public static void createCustomer(DatabaseClient dbClient, String Username, String Password, String FirstName, String LastName, String MobileNumber){
+    public static void createCustomer(DatabaseClient dbClient, String Username, String Password, String FirstName,
+                                      String LastName, String MobileNumber){
         dbClient
                 .readWriteTransaction()
                 .run(transaction -> {
                     int customerId = new Random().nextInt();
                     String sql =
-                            String.format("INSERT INTO Customers (CustomerId, Username, Password, FirstName, LastName, MobileNumber) "
+                            String.format("INSERT INTO Customers (CustomerId, Username, Password, FirstName, LastName, " +
+                                            "MobileNumber) "
                                     + " VALUES (%s, '%s', '%s', '%s', '%s', '%s')", customerId, Username, Password,
                                     FirstName, LastName, MobileNumber);
                     long rowCount = transaction.executeUpdate(Statement.of(sql));
@@ -25,14 +27,16 @@ public class InsertAndReadData {
                 .run(transaction -> {
                     // Read inserted record.
                     String sql =
-                            String.format("SELECT FirstName, LastName, MobileNumber FROM Customers WHERE Username = '%s' AND Password = '%s'",
+                            String.format("SELECT FirstName, LastName, MobileNumber FROM Customers WHERE Username = '%s' " +
+                                            "AND Password = '%s'",
                             Username, Password);
                     // We use a try-with-resource block to automatically release resources held by ResultSet.
                     try (ResultSet resultSet = transaction.executeQuery(Statement.of(sql))) {
                         while (resultSet.next()) {
                             System.out.printf(
                                     "Customer found as: %s %s %s\n",
-                                    resultSet.getString("FirstName"), resultSet.getString("LastName"), resultSet.getString("MobileNumber"));
+                                    resultSet.getString("FirstName"), resultSet.getString("LastName"),
+                                    resultSet.getString("MobileNumber"));
                         }
                     }
                     return null;
@@ -40,10 +44,10 @@ public class InsertAndReadData {
     }
 
     public static void main(String[] args) {
-        String instanceId = "quickstart-instance";
-        String databaseId = "quickstart-database";
+        String instanceId = "banking";
+        String databaseId = "customers";
 
-        SpannerOptions options = SpannerOptions.newBuilder().build();
+        SpannerOptions options = SpannerOptions.newBuilder().setEmulatorHost("localhost:9010").build();
         Spanner spanner = options.getService();
 
         Scanner input = new Scanner(System.in);
