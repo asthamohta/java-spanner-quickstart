@@ -1,8 +1,10 @@
 import com.google.api.gax.longrunning.OperationFuture;
 import com.google.cloud.spanner.*;
 import com.google.spanner.admin.database.v1.CreateDatabaseMetadata;
+import com.google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 public class CreateInstanceAndDatabase {
     public static void main(String[] args) {
@@ -34,6 +36,39 @@ public class CreateInstanceAndDatabase {
             // Initiate the request which returns an OperationFuture.
             Database database = operationDatabase.get();
             System.out.println("Created database [" + database.getId() + "]");
+        } catch (ExecutionException e) {
+            // If the operation failed during execution, expose the cause.
+            throw (SpannerException) e.getCause();
+        } catch (InterruptedException e) {
+            // Throw when a thread is waiting, sleeping, or otherwise occupied,
+            // and the thread is interrupted, either before or during the activity.
+            throw SpannerExceptionFactory.propagateInterrupt(e);
+        }
+
+        String schemaAccounts = "CREATE TABLE Account (" +
+                "  CustomerId INT64 NOT NULL," +
+                "  AccountId INT64 NOT NULL," +
+                "  CreatedOn DATE," +
+                "  Address JSON," +
+                "  Photo BYTES(MAX)," +
+                "  LastTransactionTime TIMESTAMP," +
+                "  SavingsAccount BOOL," +
+                "  Balance NUMERIC," +
+                "  RecentTransactionTimestamps ARRAY<TIMESTAMP>" +
+                ") PRIMARY KEY (CustomerId, AccountId)," +
+                "INTERLEAVE IN PARENT Customers ON DELETE CASCADE";
+
+        DatabaseId database= DatabaseId.of(options.getProjectId(), instanceId, databaseId);
+        OperationFuture<Void, UpdateDatabaseDdlMetadata> operation =
+                dbAdminClient.updateDatabaseDdl(
+                        database.getInstanceId().getInstance(),
+                        database.getDatabase(),
+                        Collections.singleton(schemaAccounts),
+                        null);
+        try {
+            // Initiate the request which returns an OperationFuture.
+            operation.get();
+            System.out.println("Added Account Table");
         } catch (ExecutionException e) {
             // If the operation failed during execution, expose the cause.
             throw (SpannerException) e.getCause();
