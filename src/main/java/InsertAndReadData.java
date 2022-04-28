@@ -2,6 +2,7 @@ import com.google.cloud.spanner.*;
 
 import java.util.Random;
 import java.util.Scanner;
+import java.util.UUID;
 
 public class InsertAndReadData {
     public static void createCustomer(DatabaseClient dbClient, String Username, String Password, String FirstName,
@@ -9,11 +10,11 @@ public class InsertAndReadData {
         dbClient
                 .readWriteTransaction()
                 .run(transaction -> {
-                    int customerId = new Random().nextInt();
+                    String customerId = String.valueOf(UUID.randomUUID());;
                     String sql =
                             String.format("INSERT INTO Customers (CustomerId, Username, Password, FirstName, LastName, " +
                                             "MobileNumber) "
-                                    + " VALUES (%s, '%s', '%s', '%s', '%s', '%s')", customerId, Username, Password,
+                                    + " VALUES ('%s', '%s', '%s', '%s', '%s', '%s')", customerId, Username, Password,
                                     FirstName, LastName, MobileNumber);
                     long rowCount = transaction.executeUpdate(Statement.of(sql));
                     System.out.printf("%d record inserted.\n", rowCount);

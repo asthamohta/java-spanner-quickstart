@@ -23,7 +23,7 @@ public class CreateInstanceAndDatabase {
         final OperationFuture<Database, CreateDatabaseMetadata> operationDatabase = dbAdminClient
                 .createDatabase(databaseToCreate, Arrays.asList(
                         "CREATE TABLE Customers ("
-                                + "  CustomerId   INT64 NOT NULL,"
+                                + "  CustomerId   STRING(MAX) NOT NULL,"
                                 + "  Username STRING(100) NOT NULL,"
                                 + "  Password STRING(100) NOT NULL,"
                                 + "  FirstName  STRING(1024),"
@@ -45,9 +45,9 @@ public class CreateInstanceAndDatabase {
             throw SpannerExceptionFactory.propagateInterrupt(e);
         }
 
-        String schemaAccounts = "CREATE TABLE Account (" +
-                "  CustomerId INT64 NOT NULL," +
-                "  AccountId INT64 NOT NULL," +
+        String schemaAccount = "CREATE TABLE Account (" +
+                "  CustomerId STRING(MAX) NOT NULL," +
+                "  AccountId STRING(MAX) NOT NULL," +
                 "  CreatedOn DATE," +
                 "  Address JSON," +
                 "  Photo BYTES(MAX)," +
@@ -63,7 +63,7 @@ public class CreateInstanceAndDatabase {
                 dbAdminClient.updateDatabaseDdl(
                         database.getInstanceId().getInstance(),
                         database.getDatabase(),
-                        Collections.singleton(schemaAccounts),
+                        Collections.singleton(schemaAccount),
                         null);
         try {
             // Initiate the request which returns an OperationFuture.
