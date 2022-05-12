@@ -50,7 +50,7 @@ public class TransactionsAndMutations {
     }
     return Balance;
   }
-  public static void insertDataUsingTransactionsInAccountsTable(DatabaseClient dbClient, String CustomerId){
+  public static void insertDataUsingDmlInAccountsTable(DatabaseClient dbClient, String CustomerId){
     dbClient
         .readWriteTransaction()
         .run(transaction -> {
@@ -128,9 +128,8 @@ public class TransactionsAndMutations {
     input.nextLine();
 
     if(option == 1)
-    insertDataUsingTransactionsInAccountsTable(dbClient, getCustomerId(dbClient, username, password));
+    insertDataUsingDmlInAccountsTable(dbClient, getCustomerId(dbClient, username, password));
     else if(option == 2)
     insertDataUsingMutationsInLedgersTable(dbClient, getCustomerId(dbClient, username, password));
-
   }
 }
