@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
 
-public class TransactionsAndMutations {
+public class DmlAndMutations {
   public static String getCustomerId(DatabaseClient dbClient, String Username, String Password){
     return dbClient
         .readWriteTransaction()
