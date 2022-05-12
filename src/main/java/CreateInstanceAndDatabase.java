@@ -46,29 +46,41 @@ public class CreateInstanceAndDatabase {
         }
 
         String schemaAccount = "CREATE TABLE Account (" +
-                "  CustomerId STRING(MAX) NOT NULL," +
-                "  AccountId STRING(MAX) NOT NULL," +
-                "  CreatedOn DATE," +
-                "  Address JSON," +
-                "  Photo BYTES(MAX)," +
-                "  LastTransactionTime TIMESTAMP," +
-                "  SavingsAccount BOOL," +
-                "  Balance NUMERIC," +
-                "  RecentTransactionTimestamps ARRAY<TIMESTAMP>" +
-                ") PRIMARY KEY (CustomerId, AccountId)," +
-                "INTERLEAVE IN PARENT Customers ON DELETE CASCADE";
+            "  CustomerId STRING(MAX) NOT NULL," +
+            "  AccountId STRING(MAX) NOT NULL," +
+            "  CreatedOn DATE," +
+            "  Address JSON," +
+            "  Photo BYTES(MAX)," +
+            "  LastTransactionTime TIMESTAMP," +
+            "  SavingsAccount BOOL," +
+            "  Balance NUMERIC," +
+            "  RecentTransactionTimestamps ARRAY<TIMESTAMP>" +
+            ") PRIMARY KEY (CustomerId, AccountId)," +
+            "INTERLEAVE IN PARENT Customers ON DELETE CASCADE";
+
+        String schemaLedger = "CREATE TABLE Ledger (" +
+            "  CustomerId STRING(MAX) NOT NULL," +
+            "  AccountId STRING(MAX) NOT NULL," +
+            "  TransactionId STRING(MAX) NOT NULL," +
+            "  Date DATE," +
+            "  Details STRING(MAX)," +
+            "  Amount NUMERIC," +
+            ") PRIMARY KEY (CustomerId, AccountId, TransactionId)," +
+            "INTERLEAVE IN PARENT Account ON DELETE CASCADE";
 
         DatabaseId database= DatabaseId.of(options.getProjectId(), instanceId, databaseId);
         OperationFuture<Void, UpdateDatabaseDdlMetadata> operation =
                 dbAdminClient.updateDatabaseDdl(
                         database.getInstanceId().getInstance(),
                         database.getDatabase(),
-                        Collections.singleton(schemaAccount),
+                        Arrays.asList(
+                            schemaAccount,
+                            schemaLedger),
                         null);
         try {
             // Initiate the request which returns an OperationFuture.
             operation.get();
-            System.out.println("Added Account Table");
+            System.out.println("Added Account Table and Ledger Table");
         } catch (ExecutionException e) {
             // If the operation failed during execution, expose the cause.
             throw (SpannerException) e.getCause();
