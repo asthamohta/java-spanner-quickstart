@@ -1,6 +1,8 @@
 import com.google.cloud.spanner.DatabaseClient;
 import com.google.cloud.spanner.DatabaseId;
+import com.google.cloud.spanner.KeySet;
 import com.google.cloud.spanner.Mutation;
+import com.google.cloud.spanner.ReadOnlyTransaction;
 import com.google.cloud.spanner.ResultSet;
 import com.google.cloud.spanner.Spanner;
 import com.google.cloud.spanner.SpannerOptions;
@@ -13,23 +15,18 @@ import java.util.UUID;
 
 public class DmlAndMutations {
   public static String getCustomerId(DatabaseClient dbClient, String Username, String Password){
-    return dbClient
-        .readWriteTransaction()
-        .run(transaction -> {
-          // Read inserted record.
-          String readSql =
-              String.format("SELECT CustomerId FROM Customers WHERE Username = '%s' " +
+    try (ReadOnlyTransaction transaction = dbClient.readOnlyTransaction()) {
+      ResultSet queryResultSet =
+          transaction.executeQuery(
+              Statement.of(String.format("SELECT CustomerId FROM Customers WHERE Username = '%s' " +
                       "AND Password = '%s'",
-                  Username, Password);
-          // We use a try-with-resource block to automatically release resources held by ResultSet.
-          String CustomerId="";
-          try (ResultSet resultSet = transaction.executeQuery(Statement.of(readSql))) {
-            while (resultSet.next()) {
-              CustomerId = resultSet.getString("CustomerId");
-            }
-          }
-          return CustomerId;
-        });
+                  Username, Password)));
+      String CustomerId="";
+      while (queryResultSet.next()) {
+        CustomerId=queryResultSet.getString(0);
+      }
+      return CustomerId;
+    }
   }
 
   public static BigDecimal getBalance(DatabaseClient dbClient, String CustomerId, String AccountId){
@@ -77,6 +74,7 @@ public class DmlAndMutations {
     System.out.println("Enter Debit or Credit Amount");
     BigDecimal Amount = new BigDecimal(input.nextLine());
     String TransactionId = String.valueOf(UUID.randomUUID());
+    BigDecimal Balance = getBalance(dbClient, CustomerId, AccountId).add(Amount);
     List<Mutation> mutations =
         Arrays.asList(
             Mutation.newInsertBuilder("Ledger")
@@ -99,7 +97,7 @@ public class DmlAndMutations {
                 .set("AccountId")
                 .to(AccountId)
                 .set("Balance")
-                .to(getBalance(dbClient, CustomerId, AccountId).add(Amount))
+                .to(Balance)
                 .build()
         );
     dbClient.write(mutations);
